@@ -1,0 +1,39 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+
+# Playwright test reports
+playwright-report/
+test-results/
+trace.zip
+*.xml
+
+# Docs
+doc/
+
+# Docker
+*.tar
+*.img
+.dockerignore
+
+# Local environment
+.env
+.env.*
+*.local
+
+# VSCode/IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# GitHub workflows cache
+.github/workflows/*.log
+.github/workflows/*.tmp
