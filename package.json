@@ -1,0 +1,33 @@
+{
+  "name": "midnight_api_test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "npx playwright test",
+    "test:docker:build": "\"docker\" build --no-cache -t midnight-api-tests .",
+    "test:docker:run": "\"docker\" run --rm midnight-api-tests npx playwright test",
+    "test:docker:build-run": "npm run test:docker:build && npm run test:docker:run",
+    "test:docker:shell": "\"docker\" run -it --rm midnight-api-tests /bin/bash"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leonard01/midnight_api_test.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/leonard01/midnight_api_test/issues"
+  },
+  "homepage": "https://github.com/leonard01/midnight_api_test#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.54.1",
+    "cross-env": "^7.0.3",
+    "playwright": "^1.54.1"
+  },
+  "dependencies": {
+    "docker": "^1.0.0"
+  }
+}
