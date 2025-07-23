@@ -28,6 +28,7 @@
     "playwright": "^1.54.1"
   },
   "dependencies": {
-    "docker": "^1.0.0"
+    "docker": "^1.0.0",
+    "package-lock.json": "^1.0.0"
   }
 }
