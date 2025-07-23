@@ -2,16 +2,17 @@ FROM mcr.microsoft.com/playwright:v1.48.0-jammy
 
 WORKDIR /app
 
-# Copy package files and install deps
+# Copy dependencies
 COPY package*.json ./
-RUN npm install
-# Or use strict install (if lockfile fixed)
-# RUN npm ci
 
-# Install browser dependencies
+# Install dependencies
+RUN npm ci
+
+# Install browsers and dependencies
 RUN npx playwright install --with-deps
 
-# Copy the rest of the project
+# Copy project files
 COPY . .
 
+# Run tests (reports saved to /app/playwright-report & /app/junit-results)
 CMD ["npx", "playwright", "test"]

@@ -2,12 +2,12 @@ name: Playwright API Tests
 
 on:
   push:
-    branches: [main] # Run on push to main
+    branches: [main]
   pull_request:
-    branches: [main] # Run on PRs
-  workflow_dispatch: # Manual trigger
+    branches: [main]
+  workflow_dispatch: # Allow manual trigger
   schedule:
-    - cron: '0 0 * * *' # Nightly at midnight UTC
+    - cron: '0 0 * * *' # Nightly run at midnight UTC
 
 jobs:
   test:
@@ -24,25 +24,22 @@ jobs:
       run: docker build --no-cache -t midnight-api-tests .
 
     - name: 🧪 Run Playwright tests in Docker
-      run: docker run --rm -v ${{ github.workspace }}/playwright-report:/app/playwright-report -v ${{ github.workspace }}/junit-results:/app/junit-results midnight-api-tests
+      run: |
+        docker run --rm \
+          -v ${{ github.workspace }}/playwright-report:/app/playwright-report \
+          -v ${{ github.workspace }}/junit-results:/app/junit-results \
+          midnight-api-tests
 
     - name: 📄 Upload Playwright HTML report
-      if: always() # Even upload if tests fail
+      if: success() || failure()
       uses: actions/upload-artifact@v4
       with:
         name: playwright-report
         path: playwright-report/
 
     - name: 📜 Upload JUnit XML report
-      if: always()
+      if: success() || failure()
       uses: actions/upload-artifact@v4
       with:
         name: junit-results
         path: junit-results/
-
-    - name: 📘 Upload Docker build logs
-      if: failure()
-      uses: actions/upload-artifact@v4
-      with:
-        name: docker-build-logs
-        path: /root/.npm/_logs/
