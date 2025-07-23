@@ -1,17 +1,17 @@
-# 🟢 Clean Playwright base image
 FROM mcr.microsoft.com/playwright:v1.48.0-jammy
 
-# Set working directory
 WORKDIR /app
 
-# Copy package.json and lockfile
+# Copy package files and install deps
 COPY package*.json ./
+RUN npm install
+# Or use strict install (if lockfile fixed)
+# RUN npm ci
 
-# Install dependencies
-RUN npm ci
+# Install browser dependencies
+RUN npx playwright install --with-deps
 
-# Copy all remaining files
+# Copy the rest of the project
 COPY . .
 
-# 🟢 Explicitly run tests
 CMD ["npx", "playwright", "test"]
