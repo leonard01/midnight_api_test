@@ -18,6 +18,7 @@ test.describe('Schema Validation Test', () => {
 
   test('should return a response conforming to the metadata schema', async () => {
     const response = await apiContext.get(`/metadata/${testSubject}`);
+    console.log('Response:', JSON.stringify(response, null, 2));
     expect(response.ok()).toBeTruthy();
 
     const body = await response.json();

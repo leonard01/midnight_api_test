@@ -21,12 +21,6 @@ const subjects = [
   }
 ];
 
-// to do
-
-// Add logging for all requests and responses - see email
-// schema validation
-
-
 let apiContext;
 
 test.beforeAll(async () => {
@@ -45,6 +39,7 @@ test.describe('GET /metadata/:subject', () => {
     test('should return metadata for a valid subject', async () => {
         const subject = subjects[0];
         const response = await apiContext.get(`/metadata/${subject.subject}`);
+        console.log('Response:', JSON.stringify(response, null, 2));
         expect(response.ok()).toBeTruthy();
         const body = await response.json();
         assertSubjectProperties(body, subject);
@@ -53,6 +48,7 @@ test.describe('GET /metadata/:subject', () => {
     test('should return correct metadata for second valid subject', async () => {
         const subject = subjects[1]; // Amazing Coin
         const response = await apiContext.get(`/metadata/${subject.subject}`);
+        console.log('Response:', JSON.stringify(response, null, 2));
         expect(response.ok()).toBeTruthy();
         const body = await response.json();
         expect(body).toHaveProperty('subject', subject.subject);
@@ -64,6 +60,7 @@ test.describe('GET /metadata/:subject', () => {
         const subject = '919e8a1922aaa764b1d66407c6f62244e77081215f385b60a62091494861707079436f696e';
 
         const response = await apiContext.get(`/metadata/${subject}`);
+        console.log('Response:', JSON.stringify(response, null, 2));
         expect(response.ok()).toBeTruthy();
 
         const body = await response.json();
@@ -89,6 +86,7 @@ test.describe('GET /metadata/:subject', () => {
     test('should return 400 Bad Request for malformed subject', async () => {
         const malformedSubject = 'INVALID_SUBJECT';
         const response = await apiContext.get(`/metadata/${malformedSubject}`);
+        console.log('Response:', JSON.stringify(response, null, 2));
         expect(response.status()).toBe(400);
     });
 
@@ -96,6 +94,7 @@ test.describe('GET /metadata/:subject', () => {
     test('should handle non-existent subject gracefully and return 404', async () => {
         const fakeSubject = 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
         const response = await apiContext.get(`/metadata/${fakeSubject}`);
+        console.log('Response:', JSON.stringify(response, null, 2));
         expect([404]).toContain(response.status());
         const body = await response.text();
         expect(body).toContain(`Requested subject '${fakeSubject}' not found`);
@@ -105,6 +104,7 @@ test.describe('GET /metadata/:subject', () => {
     test('should return 400  for subject with non-hex chars', async () => {
         const invalidSubject = 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz';
         const response = await apiContext.get(`/metadata/${invalidSubject}`);
+        console.log('Response:', JSON.stringify(response, null, 2));
 
         expect(response.ok()).toBeFalsy();
         expect([400]).toContain(response.status());
@@ -112,6 +112,7 @@ test.describe('GET /metadata/:subject', () => {
 
     test('should return 404 for missing subject', async () => {
         const response = await apiContext.get(`/metadata/`);
+        console.log('Response:', JSON.stringify(response, null, 2));
         expect(response.status()).toBe(404);
     });
 
@@ -119,6 +120,7 @@ test.describe('GET /metadata/:subject', () => {
     test('should return 405 for using POST', async () => {
         const subject = subjects[0].subject;
         const response = await apiContext.post(`/metadata/${subject}`);
+        console.log('Response:', JSON.stringify(response, null, 2));
         expect(response.status()).toBe(405);
     });
 
@@ -126,6 +128,7 @@ test.describe('GET /metadata/:subject', () => {
     test('should return error for short subject', async () => {
         const shortHexSubject = 'abc123';
         const response = await apiContext.get(`/metadata/${shortHexSubject}`);
+        console.log('Response:', JSON.stringify(response, null, 2));
         expect(response.status()).toBeGreaterThanOrEqual(400);
     });
 
@@ -133,6 +136,7 @@ test.describe('GET /metadata/:subject', () => {
     test('should return 404 or error for numeric subject', async () => {
         const numericSubject = '123456789';
         const response = await apiContext.get(`/metadata/${numericSubject}`);
+        console.log('Response:', JSON.stringify(response, null, 2));
         expect(response.status()).toBeGreaterThanOrEqual(400);
     });
 
@@ -140,6 +144,7 @@ test.describe('GET /metadata/:subject', () => {
     test('should return 404 for subject with special characters', async () => {
         const specialCharSubject = '@#$%';
         const response = await apiContext.get(`/metadata/${specialCharSubject}`);
+        console.log('Response:', JSON.stringify(response, null, 2));
         expect(response.status()).toBe(400);
     });
 
@@ -147,6 +152,7 @@ test.describe('GET /metadata/:subject', () => {
     test('should return 400 for extremely long subject string', async () => {
         const longHex = 'a'.repeat(1024); // 1024 characters of hex-like input
         const response = await apiContext.get(`/metadata/${longHex}`);
+        console.log('Response:', JSON.stringify(response, null, 2));
         expect(response.status()).toBeGreaterThanOrEqual(400);
     });
 
@@ -154,6 +160,7 @@ test.describe('GET /metadata/:subject', () => {
     test('should return 404 for valid hex format but random data', async () => {
         const randomHex = [...Array(64)].map(() => Math.floor(Math.random() * 16).toString(16)).join('');
         const response = await apiContext.get(`/metadata/${randomHex}`);
+        console.log('Response:', JSON.stringify(response, null, 2));
         expect(response.status()).toBe(404);
     });
   });
@@ -166,6 +173,7 @@ test.describe('GET /metadata/:subject/properties/:property', () => {
 
     for (const [property, expectedValue] of Object.entries(subject.expectedProperties)) {
       const response = await apiContext.get(`/metadata/${subject.subject}/properties/${property}`);
+      console.log('Response:', JSON.stringify(response, null, 2));
       expect(response.ok()).toBeTruthy();
 
       const body = await response.json();
@@ -186,6 +194,7 @@ test.describe('GET /metadata/:subject/properties/:property', () => {
 
     for (const [property, expectedValue] of Object.entries(subject.expectedProperties)) {
       const response = await apiContext.get(`/metadata/${subject.subject}/properties/${property}`);
+      console.log('Response:', JSON.stringify(response, null, 2));
       expect(response.ok()).toBeTruthy();
 
       const body = await response.json();
@@ -217,6 +226,7 @@ test.describe('GET /metadata/:subject/properties/:property', () => {
     };
 
     const response = await apiContext.get(`/metadata/${subject}/properties/${property}`);
+    console.log('Response:', JSON.stringify(response, null, 2));
     expect(response.status()).toBe(200);
     const body = await response.json();
     expect(body).toEqual(expectedResponse);
@@ -225,6 +235,7 @@ test.describe('GET /metadata/:subject/properties/:property', () => {
   test('should return correct `name` property for HappyCoin', async () => {
     const { subject, expectedProperties } = subjects[0];
     const response = await apiContext.get(`/metadata/${subject}/properties/name`);
+    console.log('Response:', JSON.stringify(response, null, 2));
 
     expect(response.ok()).toBeTruthy();
 
@@ -239,6 +250,7 @@ test.describe('GET /metadata/:subject/properties/:property', () => {
 test('should return correct `description` property for Amazing Coin', async () => {
   const { subject, expectedProperties } = subjects[1];
   const response = await apiContext.get(`/metadata/${subject}/properties/description`);
+  console.log('Response:', JSON.stringify(response, null, 2));
 
   expect(response.ok()).toBeTruthy();
 
@@ -253,6 +265,7 @@ test('should return correct `description` property for Amazing Coin', async () =
 test('should return correct `url` property for Amazing Coin', async () => {
   const { subject, expectedProperties } = subjects[1];
   const response = await apiContext.get(`/metadata/${subject}/properties/url`);
+  console.log('Response:', JSON.stringify(response, null, 2));
 
   expect(response.ok()).toBeTruthy();
 
@@ -269,6 +282,7 @@ test('should return correct ticker for HappyCoin', async ({ request }) => {
     const expectedTicker = 'HAPPY3';
 
     const response = await request.get(`/metadata/${subject}/properties/ticker`);
+    console.log('Response:', JSON.stringify(response, null, 2));
     expect(response.ok()).toBeTruthy();
 
     const body = await response.json();
@@ -281,6 +295,7 @@ test('should return correct ticker for HappyCoin', async ({ request }) => {
 test('should return 400 for malformed subject (non-hex characters)', async () => {
   const malformedSubject = 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz';
   const response = await apiContext.get(`/metadata/${malformedSubject}/properties/name`);
+  console.log('Response:', JSON.stringify(response, null, 2));
   expect(response.status()).toEqual(400);
 });
 
@@ -288,6 +303,7 @@ test('should return 400 for malformed subject (non-hex characters)', async () =>
 test('should return 404 for non-existent subject', async () => {
   const fakeSubject = 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
   const response = await apiContext.get(`/metadata/${fakeSubject}/properties/name`);
+  console.log('Response:', JSON.stringify(response, null, 2));
   expect(response.status()).toBe(404);
   const body = await response.text();
   expect(body).toContain(`Requested subject '${fakeSubject}' not found`);
@@ -298,6 +314,7 @@ test('should return 404 for invalid property name', async () => {
   const subject = subjects[0].subject;
   const invalidProperty = 'ticker';
   const response = await apiContext.get(`/metadata/${subject}/properties/${invalidProperty}`);
+  console.log('Response:', JSON.stringify(response, null, 2));
   expect(response.status()).toBe(404);
 
   const body = await response.text();
@@ -308,6 +325,7 @@ test('should return 404 for invalid property name', async () => {
 test('should return 404 when property name is missing in the URL', async () => {
   const subject = subjects[0].subject;
   const response = await apiContext.get(`/metadata/${subject}/properties/`);
+  console.log('Response:', JSON.stringify(response, null, 2));
   expect(response.status()).toBe(404);
 });
 
@@ -318,6 +336,7 @@ test('should return 400 for malformed subject format', async () => {
   const property = 'name';
 
   const response = await apiContext.get(`/metadata/${malformedSubject}/properties/${property}`);
+  console.log('Response:', JSON.stringify(response, null, 2));
   expect(response.status()).toBe(400);
 });
 
@@ -326,23 +345,27 @@ test('should return 404 for unknown property name', async () => {
   const subject = subjects[0].subject;
   const invalidProperty = 'unknownProperty';
   const response = await apiContext.get(`/metadata/${subject}/properties/${invalidProperty}`);
+  console.log('Response:', JSON.stringify(response, null, 2));
   expect(response.status()).toBe(404);
 });
 
 test('should return 404 for empty subject with valid property', async () => {
   const property = 'name';
   const response = await apiContext.get(`/metadata//properties/${property}`);
+  console.log('Response:', JSON.stringify(response, null, 2));
   expect(response.status()).toBe(404);
 });
 
 test('should return 404 for valid subject but empty property', async () => {
   const { subject } = subjects[0];
   const response = await apiContext.get(`/metadata/${subject}/properties/`);
+  console.log('Response:', JSON.stringify(response, null, 2));
   expect(response.status()).toBe(404);
 });
 
 test('should return 404 for empty subject and empty property', async () => {
   const response = await apiContext.get(`/metadata//properties/`);
+  console.log('Response:', JSON.stringify(response, null, 2));
   expect(response.status()).toBe(404);
 });
 
@@ -350,6 +373,7 @@ test('should return 404 for empty subject and empty property', async () => {
 test('should return 400 for excessively long subject', async () => {
   const longSubject = 'a'.repeat(2048);
   const response = await apiContext.get(`/metadata/${longSubject}/properties/name`);
+  console.log('Response:', JSON.stringify(response, null, 2));
   expect(response.status()).toBe(400);
 });
 
@@ -358,6 +382,7 @@ test('should return 404 for property with special characters', async () => {
   const { subject } = subjects[0];
   const invalidProperty = '!@#$%^&*()';
   const response = await apiContext.get(`/metadata/${subject}/properties/${invalidProperty}`);
+  console.log('Response:', JSON.stringify(response, null, 2));
   expect(response.status()).toBe(404);
 });
 
@@ -366,6 +391,7 @@ test('should return 404 for uppercase property name', async () => {
   const { subject } = subjects[0];
   const uppercaseProperty = 'Name';
   const response = await apiContext.get(`/metadata/${subject}/properties/${uppercaseProperty}`);
+  console.log('Response:', JSON.stringify(response, null, 2));
   expect(response.status()).toBe(404);
 });
 
@@ -373,6 +399,7 @@ test('should return 404 for uppercase property name', async () => {
 test('should return 404 when property name is empty', async () => {
   const { subject } = subjects[0];
   const response = await apiContext.get(`/metadata/${subject}/properties/`);
+  console.log('Response:', JSON.stringify(response, null, 2));
   expect(response.status()).toBe(404); // Or adjust if should be 400
 });
 
@@ -381,6 +408,7 @@ test('should return 400 for property name with special characters', async () => 
   const { subject } = subjects[0];
   const invalidProperty = '@#$%';
   const response = await apiContext.get(`/metadata/${subject}/properties/${invalidProperty}`);
+  console.log('Response:', JSON.stringify(response, null, 2));
   expect(response.status()).toBe(400);
 });
 
@@ -388,6 +416,7 @@ test('should return 400 for property name with special characters', async () => 
 test('should return 404 when /properties/ segment is missing', async () => {
   const { subject } = subjects[0];
   const response = await apiContext.get(`/metadata/${subject}`);
+  console.log('Response:', JSON.stringify(response, null, 2));
   expect(response.status()).toBe(404);
 });
 
