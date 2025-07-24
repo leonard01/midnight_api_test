@@ -27,7 +27,6 @@ const subjects = [
 // add non existant subject test /get
 // add fuzzy tests - use fuzzy lib
 // are valid get requests returning duplicate responses?
-// delete expected properties??
 
 test.describe('Get API Tests', () => {
     let apiContext;
@@ -93,6 +92,80 @@ test.describe('GET /metadata/:subject', () => {
         expect(Array.isArray(body.name?.signatures ?? body.name?.anSignatures)).toBeTruthy();
         expect(Array.isArray(body.description?.signatures ?? body.description?.anSignatures)).toBeTruthy();
         expect(Array.isArray(body.url?.signatures)).toBeTruthy();
+    });
+
+
+
+    // test failing - should return 400  
+    test('should return 400 Bad Request for malformed subject', async () => {
+        const malformedSubject = 'INVALID_SUBJECT';
+        const response = await apiContext.get(`/metadata/${malformedSubject}`);
+        expect(response.status()).toBe(400);
+    });
+
+    // test failing - should return 404 
+    test('should handle non-existent subject gracefully and return 404', async () => {
+        const fakeSubject = 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
+        const response = await apiContext.get(`/metadata/${fakeSubject}`);
+        expect([404]).toContain(response.status());
+        const body = await response.text();
+        expect(body).toContain(`Requested subject '${fakeSubject}' not found`);
+    });
+
+    // test failing - should return 400
+    test('should return 400  for subject with non-hex chars', async () => {
+        const invalidSubject = 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz';
+        const response = await apiContext.get(`/metadata/${invalidSubject}`);
+
+        expect(response.ok()).toBeFalsy();
+        expect([400]).toContain(response.status());
+    });
+
+    test('should return 404 for missing subject', async () => {
+        const response = await apiContext.get(`/metadata/`);
+        expect(response.status()).toBe(404);
+    });
+
+    // test failing 
+    test('should return 405 for using POST', async () => {
+        const subject = subjects[0].subject;
+        const response = await apiContext.post(`/metadata/${subject}`);
+        expect(response.status()).toBe(405);
+    });
+
+    // test failing 
+    test('should return error for short subject', async () => {
+        const shortHexSubject = 'abc123';
+        const response = await apiContext.get(`/metadata/${shortHexSubject}`);
+        expect(response.status()).toBeGreaterThanOrEqual(400);
+    });
+
+    // test failing 
+    test('should return 404 or error for numeric subject', async () => {
+        const numericSubject = '123456789';
+        const response = await apiContext.get(`/metadata/${numericSubject}`);
+        expect(response.status()).toBeGreaterThanOrEqual(400);
+    });
+
+    // test failing 
+    test('should return 404 for subject with special characters', async () => {
+        const specialCharSubject = '@#$%';
+        const response = await apiContext.get(`/metadata/${specialCharSubject}`);
+        expect(response.status()).toBe(400);
+    });
+
+    // test failing 
+    test('should return 400 for extremely long subject string', async () => {
+        const longHex = 'a'.repeat(1024); // 1024 characters of hex-like input
+        const response = await apiContext.get(`/metadata/${longHex}`);
+        expect(response.status()).toBeGreaterThanOrEqual(400);
+    });
+
+    // test failing 
+    test('should return 404 for valid hex format but random data', async () => {
+        const randomHex = [...Array(64)].map(() => Math.floor(Math.random() * 16).toString(16)).join('');
+        const response = await apiContext.get(`/metadata/${randomHex}`);
+        expect(response.status()).toBe(404);
     });
   });
 
