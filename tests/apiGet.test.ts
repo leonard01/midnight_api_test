@@ -24,21 +24,21 @@ const subjects = [
 // to do
 
 // Add logging for all requests and responses - see email
-// add non existant subject test /get
-// add fuzzy tests - use fuzzy lib
-// are valid get requests returning duplicate responses?
+// schema validation
+
+
+let apiContext;
+
+test.beforeAll(async () => {
+  apiContext = await request.newContext({ baseURL });
+});
+
+test.afterAll(async () => {
+  await apiContext.dispose();
+});
+
 
 test.describe('Get API Tests', () => {
-    let apiContext;
-
-    test.beforeAll(async () => {
-        apiContext = await request.newContext({ baseURL });
-    });
-
-    test.afterAll(async () => {
-        await apiContext.dispose();
-    });
-
 
 test.describe('GET /metadata/:subject', () => {
 
@@ -47,13 +47,7 @@ test.describe('GET /metadata/:subject', () => {
         const response = await apiContext.get(`/metadata/${subject.subject}`);
         expect(response.ok()).toBeTruthy();
         const body = await response.json();
-        expect(body).toHaveProperty('subject', subject.subject);
-
-        for (const [key, value] of Object.entries(subject.expectedProperties)) {
-            expect(body).toHaveProperty(key);
-            expect(body[key]).toHaveProperty('value');
-            expect(body[key].value).toBe(value);
-        }
+        assertSubjectProperties(body, subject);
     });
 
     test('should return correct metadata for second valid subject', async () => {
@@ -62,12 +56,7 @@ test.describe('GET /metadata/:subject', () => {
         expect(response.ok()).toBeTruthy();
         const body = await response.json();
         expect(body).toHaveProperty('subject', subject.subject);
-
-        for (const [key, value] of Object.entries(subject.expectedProperties)) {
-            expect(body).toHaveProperty(key);
-            expect(body[key]).toHaveProperty('value');
-            expect(body[key].value).toBe(value);
-        }
+        assertSubjectProperties(body, subject);
     });
   
 
@@ -169,4 +158,259 @@ test.describe('GET /metadata/:subject', () => {
     });
   });
 
+
+test.describe('GET /metadata/:subject/properties/:property', () => {
+  
+  test('should return all properties for HappyCoin', async () => {
+    const subject = subjects[0];
+
+    for (const [property, expectedValue] of Object.entries(subject.expectedProperties)) {
+      const response = await apiContext.get(`/metadata/${subject.subject}/properties/${property}`);
+      expect(response.ok()).toBeTruthy();
+
+      const body = await response.json();
+
+      expect(body).toHaveProperty('value', expectedValue);
+      expect(Array.isArray(body.signatures)).toBeTruthy();
+      expect(body.signatures.length).toBeGreaterThan(0);
+
+      for (const sig of body.signatures) {
+        expect(sig).toHaveProperty('signature');
+        expect(sig).toHaveProperty('publicKey');
+      }
+    }
   });
+
+  test('should return all properties for Amazing Coin', async () => {
+    const subject = subjects[1];
+
+    for (const [property, expectedValue] of Object.entries(subject.expectedProperties)) {
+      const response = await apiContext.get(`/metadata/${subject.subject}/properties/${property}`);
+      expect(response.ok()).toBeTruthy();
+
+      const body = await response.json();
+
+      expect(body).toHaveProperty('value', expectedValue);
+      expect(Array.isArray(body.signatures)).toBeTruthy();
+      expect(body.signatures.length).toBeGreaterThan(0);
+
+      for (const sig of body.signatures) {
+        expect(sig).toHaveProperty('signature');
+        expect(sig).toHaveProperty('publicKey');
+      }
+    }
+  });
+
+   test('should return exact full data for name property of HappyCoin', async () => {
+    const subject = '919e8a1922aaa764b1d66407c6f62244e77081215f385b60a62091494861707079436f696e';
+    const property = 'name';
+
+    const expectedResponse = {
+      sequenceNumber: 0,
+      value: 'HappyCoin',
+      signatures: [
+        {
+          signature: '10c0761f6992768208644451cfd8bf77c1a09f8346a2381c22d87107aef107dee3db29d826b7332f0181546d30ad49c6d3338c70ce7aa082ae2dd54e78e9cf01',
+          publicKey: 'db2c42a7c5b70d7e635b95c5864439f22ccd6639cc7bc128a88a804f149a4448'
+        }
+      ]
+    };
+
+    const response = await apiContext.get(`/metadata/${subject}/properties/${property}`);
+    expect(response.status()).toBe(200);
+    const body = await response.json();
+    expect(body).toEqual(expectedResponse);
+  });
+
+  test('should return correct `name` property for HappyCoin', async () => {
+    const { subject, expectedProperties } = subjects[0];
+    const response = await apiContext.get(`/metadata/${subject}/properties/name`);
+
+    expect(response.ok()).toBeTruthy();
+
+    const body = await response.json();
+    expect(body.value).toBe(expectedProperties.name);
+    expect(body).toHaveProperty('sequenceNumber', 0);
+    expect(Array.isArray(body.signatures)).toBeTruthy();
+    expect(body.signatures[0]).toHaveProperty('signature');
+    expect(body.signatures[0]).toHaveProperty('publicKey');
+  });
+
+test('should return correct `description` property for Amazing Coin', async () => {
+  const { subject, expectedProperties } = subjects[1];
+  const response = await apiContext.get(`/metadata/${subject}/properties/description`);
+
+  expect(response.ok()).toBeTruthy();
+
+  const body = await response.json();
+  expect(body.value).toBe(expectedProperties.description);
+  expect(body).toHaveProperty('sequenceNumber', 0); // or 1 if known
+  expect(Array.isArray(body.signatures)).toBeTruthy();
+  expect(body.signatures[0]).toHaveProperty('signature');
+  expect(body.signatures[0]).toHaveProperty('publicKey');
+});
+
+test('should return correct `url` property for Amazing Coin', async () => {
+  const { subject, expectedProperties } = subjects[1];
+  const response = await apiContext.get(`/metadata/${subject}/properties/url`);
+
+  expect(response.ok()).toBeTruthy();
+
+  const body = await response.json();
+  expect(body.value).toBe(expectedProperties.url);
+  expect(body).toHaveProperty('sequenceNumber', 0);
+  expect(Array.isArray(body.signatures)).toBeTruthy();
+  expect(body.signatures[0]).toHaveProperty('signature');
+  expect(body.signatures[0]).toHaveProperty('publicKey');
+});
+
+test('should return correct ticker for HappyCoin', async ({ request }) => {
+    const { subject } = subjects[0]; // HappyCoin
+    const expectedTicker = 'HAPPY3';
+
+    const response = await request.get(`/metadata/${subject}/properties/ticker`);
+    expect(response.ok()).toBeTruthy();
+
+    const body = await response.json();
+    expect(body).toHaveProperty('value', expectedTicker);
+    expect(typeof body.sequenceNumber).toBe('number');
+    expect(Array.isArray(body.signatures)).toBeTruthy();
+  });
+
+// test failing
+test('should return 400 for malformed subject (non-hex characters)', async () => {
+  const malformedSubject = 'zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz';
+  const response = await apiContext.get(`/metadata/${malformedSubject}/properties/name`);
+  expect(response.status()).toEqual(400);
+});
+
+// test failing
+test('should return 404 for non-existent subject', async () => {
+  const fakeSubject = 'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
+  const response = await apiContext.get(`/metadata/${fakeSubject}/properties/name`);
+  expect(response.status()).toBe(404);
+  const body = await response.text();
+  expect(body).toContain(`Requested subject '${fakeSubject}' not found`);
+});
+
+// test failing
+test('should return 404 for invalid property name', async () => {
+  const subject = subjects[0].subject;
+  const invalidProperty = 'ticker';
+  const response = await apiContext.get(`/metadata/${subject}/properties/${invalidProperty}`);
+  expect(response.status()).toBe(404);
+
+  const body = await response.text();
+  expect(body).toContain(`Property '${invalidProperty}' not found for subject '${subject}'`);
+});
+
+
+test('should return 404 when property name is missing in the URL', async () => {
+  const subject = subjects[0].subject;
+  const response = await apiContext.get(`/metadata/${subject}/properties/`);
+  expect(response.status()).toBe(404);
+});
+
+
+// needs fixed
+test('should return 400 for malformed subject format', async () => {
+  const malformedSubject = 'not-a-valid-subject';
+  const property = 'name';
+
+  const response = await apiContext.get(`/metadata/${malformedSubject}/properties/${property}`);
+  expect(response.status()).toBe(400);
+});
+
+// needs fixed
+test('should return 404 for unknown property name', async () => {
+  const subject = subjects[0].subject;
+  const invalidProperty = 'unknownProperty';
+  const response = await apiContext.get(`/metadata/${subject}/properties/${invalidProperty}`);
+  expect(response.status()).toBe(404);
+});
+
+test('should return 404 for empty subject with valid property', async () => {
+  const property = 'name';
+  const response = await apiContext.get(`/metadata//properties/${property}`);
+  expect(response.status()).toBe(404);
+});
+
+test('should return 404 for valid subject but empty property', async () => {
+  const { subject } = subjects[0];
+  const response = await apiContext.get(`/metadata/${subject}/properties/`);
+  expect(response.status()).toBe(404);
+});
+
+test('should return 404 for empty subject and empty property', async () => {
+  const response = await apiContext.get(`/metadata//properties/`);
+  expect(response.status()).toBe(404);
+});
+
+// test failing
+test('should return 400 for excessively long subject', async () => {
+  const longSubject = 'a'.repeat(2048);
+  const response = await apiContext.get(`/metadata/${longSubject}/properties/name`);
+  expect(response.status()).toBe(400);
+});
+
+// test failing
+test('should return 404 for property with special characters', async () => {
+  const { subject } = subjects[0];
+  const invalidProperty = '!@#$%^&*()';
+  const response = await apiContext.get(`/metadata/${subject}/properties/${invalidProperty}`);
+  expect(response.status()).toBe(404);
+});
+
+// test failing
+test('should return 404 for uppercase property name', async () => {
+  const { subject } = subjects[0];
+  const uppercaseProperty = 'Name';
+  const response = await apiContext.get(`/metadata/${subject}/properties/${uppercaseProperty}`);
+  expect(response.status()).toBe(404);
+});
+
+// test failing
+test('should return 404 when property name is empty', async () => {
+  const { subject } = subjects[0];
+  const response = await apiContext.get(`/metadata/${subject}/properties/`);
+  expect(response.status()).toBe(404); // Or adjust if should be 400
+});
+
+// test failing
+test('should return 400 for property name with special characters', async () => {
+  const { subject } = subjects[0];
+  const invalidProperty = '@#$%';
+  const response = await apiContext.get(`/metadata/${subject}/properties/${invalidProperty}`);
+  expect(response.status()).toBe(400);
+});
+
+// test failing
+test('should return 404 when /properties/ segment is missing', async () => {
+  const { subject } = subjects[0];
+  const response = await apiContext.get(`/metadata/${subject}`);
+  expect(response.status()).toBe(404);
+});
+
+
+});
+});
+
+
+function assertValidSignatures(signatures: any[]) {
+  expect(Array.isArray(signatures)).toBeTruthy();
+  expect(signatures.length).toBeGreaterThan(0);
+  for (const sig of signatures) {
+    expect(sig).toHaveProperty('signature');
+    expect(sig).toHaveProperty('publicKey');
+  }
+}
+
+function assertSubjectProperties(body: any, subject: { subject: string; expectedProperties: Record<string, string> }) {
+  expect(body).toHaveProperty('subject', subject.subject);
+
+  for (const [key, value] of Object.entries(subject.expectedProperties)) {
+    expect(body).toHaveProperty(key);
+    expect(body[key]).toHaveProperty('value', value);
+    assertValidSignatures(body[key].signatures ?? body[key].anSignatures ?? []);
+  }
+}
